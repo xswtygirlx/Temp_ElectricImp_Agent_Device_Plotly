@@ -2,7 +2,6 @@
 
 function loggerCallback(error, response, decoded) {
     if (error == null) {
-        server.log("Tina's debugging "+ date().time );
         server.log(response.body);
     } else {
         server.error(error);

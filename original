@@ -1,0 +1,62 @@
+#require "Plotly.class.nut:1.0.0"
+
+function loggerCallback(error, response, decoded) {
+    if (error == null) {
+        server.log(response.body);
+    } else {
+        server.error(error);
+    }
+}
+
+function postToPlotly(reading) {
+    local timestamp = plot1.getPlotlyTimestamp();
+    plot1.post([
+        {
+            "name" : "Temperature",
+            "x" : [timestamp],
+            "y" : [reading["temp"]]
+        },
+        {
+            "name" : "Pressure",
+            "x" : [timestamp],
+            "y" : [reading["pressure"]]
+        },
+        {
+            "name" : "Humidity",
+            "x" : [timestamp],
+            "y" : [reading["humid"]]
+        },
+        {
+            "name" : "Lux",
+            "x" : [timestamp],
+            "y" : [reading["lux"]]
+        }], loggerCallback);
+}
+
+function constructorCallback(error, response, decoded) {
+    if (error != null) {
+        server.error(error);
+        return;
+    }
+
+    device.on("reading", postToPlotly);
+
+    plot1.setTitle("Env Tail Data", function(error, response, decoded) {
+        if (error != null) {
+            server.error(error);
+            return;
+        }
+
+        plot1.setAxisTitles("time", "Climate", function(error, response, decoded) {
+            if (error != null) {
+                server.error(error);
+                return;
+            }
+            
+            server.log("See plot at " + plot1.getUrl());
+        });
+    });
+}
+
+local traces = ["Temperature", "Pressure", "Humidity", "Lux"];
+plot1 <- Plotly("my_username", "my_api_key", "my_file_name", true, traces, constructorCallback);
